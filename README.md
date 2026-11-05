@@ -1,95 +1,97 @@
 # Web Shot
 
-**Русский** | [English](README.en.md)
+A Google Chrome extension that captures **the entire web page** with one click:
+it scrolls the page, stitches the frames into a single PNG, saves the file to Downloads
+and copies the image to the clipboard.
 
-Расширение для Google Chrome, которое одним кликом снимает **всю веб-страницу целиком**:
-прокручивает её, склеивает кадры в один PNG, сохраняет файл в «Загрузки» и сразу
-копирует картинку в буфер обмена.
+## Features
 
-## Возможности
+- Full-page screenshots by scrolling, at full screen resolution (respects HiDPI and page zoom).
+- Files are saved automatically to Downloads as `screenshot_<domain>_<date>_<time>.png`.
+- Images are copied to the clipboard, ready to paste into a chat or an editor.
+- Fixed headers appear only at the beginning of the screenshot.
+- Floating banners, chat buttons and cookie bars appear only at the end.
+- Sticky elements appear once, in their own place.
+- Progress and results appear on the icon badge: `%`, then `OK` or `ERR`. Error details appear in the icon tooltip.
+- Start by clicking the icon or pressing **Ctrl+Shift+S** (**Command+Shift+S** on macOS).
+- English and Russian UI, following the browser language.
 
-- Полностраничный скриншот с прокруткой, в полном разрешении экрана (учитывает HiDPI и масштаб страницы).
-- Файл молча сохраняется в папку «Загрузки» как `screenshot_<домен>_<дата>_<время>.png`.
-- Картинка копируется в буфер обмена — можно сразу вставить в мессенджер или редактор.
-- Закреплённые элементы не повторяются на каждом кадре:
-  - шапки, прикреплённые к верху экрана, — только в начале скриншота;
-  - плавающие баннеры, кнопки чата, cookie-плашки — только в конце;
-  - «липкие» (sticky) блоки — один раз, на своём месте.
-- Прогресс и результат показываются на значке: `%` → `OK` или `ERR`
-  (текст ошибки — во всплывающей подсказке иконки).
-- Запуск кликом по иконке или сочетанием клавиш **Ctrl+Shift+S** (на macOS — **⌘+Shift+S**).
-- Интерфейс на русском и английском (по языку браузера).
+## Installation
 
-## Установка
+### From a release
 
-### Из релиза
+1. Download `web-shot-<version>.zip` from a release you trust and unzip it into a permanent folder.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select the unzipped folder.
+4. Pin the icon to the toolbar using the puzzle icon and the pin next to Web Shot.
 
-1. Скачайте `web-shot-<версия>.zip` со страницы Releases и распакуйте его в постоянную папку.
-2. Откройте `chrome://extensions` и включите **«Режим разработчика»**.
-3. Нажмите **«Загрузить распакованное расширение»** и выберите распакованную папку.
-4. Закрепите иконку на панели: значок пазла → булавка у Web Shot.
-
-### Из исходников
+### From source
 
 ```bash
-git clone https://github.com/HelpFreedom/web-shot.git
+git clone https://github.com/albertarvato/web-shot.git
 ```
 
-Затем шаги 2–4 выше, выбрав папку `web-shot`.
+Then follow steps 2-4 above, selecting the `web-shot` folder.
 
-## Использование
+## Usage
 
-Откройте нужную страницу и нажмите на иконку Web Shot или **Ctrl+Shift+S**. Во время съёмки не переключайте
-вкладку и не прокручивайте страницу. Когда на значке появится `OK`, файл уже в «Загрузках»,
-а картинка — в буфере обмена.
+Open the page and click the Web Shot icon or press **Ctrl+Shift+S**. Do not switch tabs or scroll while it is capturing.
+When the badge shows `OK`, the download has been requested and the image is on the clipboard.
 
-Сочетание клавиш можно изменить на странице `chrome://extensions/shortcuts`. Если Ctrl+Shift+S
-уже занят другим расширением, Chrome не назначит его — тогда задайте своё сочетание там же.
+Change the shortcut at `chrome://extensions/shortcuts`. If Ctrl+Shift+S is already
+taken by another extension, Chrome will not assign it; set your own combination there.
 
-Чтобы снимать локальные файлы (`file://`), включите «Разрешить открывать файлы по ссылкам»
-в карточке расширения на `chrome://extensions`.
+To capture local files (`file://`), enable **Allow access to file URLs** on the extension's
+card at `chrome://extensions`.
 
-## Как это работает
+## How it works
 
-1. В страницу внедряется небольшой скрипт: он прячет полосы прокрутки, отключает плавную
-   прокрутку и временно делает sticky-элементы обычными.
-2. Страница прокручивается по одному экрану; каждый экран снимается через
-   `chrome.tabs.captureVisibleTab` (не чаще двух раз в секунду — это ограничение Chrome).
-3. Кадры склеиваются на `OffscreenCanvas` в фоновом service worker.
-4. PNG копируется в буфер обмена через Clipboard API и сохраняется через `chrome.downloads`.
-5. Все изменения страницы откатываются, позиция прокрутки восстанавливается.
+1. A script is injected into the page to hide scrollbars, disable smooth scrolling and temporarily make sticky elements static.
+2. The page is scrolled one screen at a time; each screen is captured with `chrome.tabs.captureVisibleTab` (at most twice per second, a Chrome limit).
+3. Frames are stitched on an `OffscreenCanvas` in the background service worker.
+4. The PNG is copied to the clipboard via the Clipboard API and saved via `chrome.downloads`.
+5. Temporary page changes are reverted and the scroll position is restored, including when capture fails, as long as the page is still accessible.
 
-## Разрешения
+## Permissions
 
-| Разрешение | Зачем |
+| Permission | Purpose |
 |---|---|
-| `activeTab` | Доступ к текущей вкладке только в момент клика по иконке |
-| `scripting` | Прокрутка страницы и скрытие закреплённых элементов во время съёмки |
-| `downloads` | Сохранение PNG в «Загрузки» |
-| `clipboardWrite` | Копирование картинки в буфер обмена |
+| `activeTab` | Temporary access to the current tab when you invoke the extension |
+| `scripting` | Scrolling the page and hiding fixed elements during capture |
+| `downloads` | Saving the PNG to Downloads |
+| `clipboardWrite` | Copying the image to the clipboard |
 
-**Приватность:** расширение не собирает данные, не делает сетевых запросов и ничего никуда
-не отправляет. Скриншоты остаются только на вашем компьютере.
+## Privacy and safety
 
-## Ограничения
+- The current source processes screenshots locally and contains no analytics or screenshot-upload code.
+- Its `fetch` call reads a local `data:` URL returned by Chrome's capture API, not a remote server.
+- Scrolling can trigger the website's own network requests, such as loading images or additional content.
+- Screenshots can contain sensitive information. They are saved to Downloads and replace the clipboard contents; other software or cloud-sync settings may expose those copies.
+- The extension does not request persistent access to all websites, cookies or browsing history.
+- Review the source you install. These statements do not verify separately downloaded release archives or future changes.
 
-- Chrome не разрешает снимать служебные страницы (`chrome://…`), Chrome Web Store и встроенный просмотрщик PDF — на них будет `ERR`.
-- Если прокручивается не сам документ, а внутренний блок (Gmail, некоторые веб-приложения), снимется только видимая область.
-- Горизонтальная прокрутка не снимается — только ширина окна.
-- Очень длинные страницы обрезаются на 60 000 px; слишком большие изображения пропорционально уменьшаются до лимитов canvas.
-- Анимированный или бесконечно подгружаемый контент может склеиться неидеально.
+## Limitations
 
-## Сборка архива для релиза
+- Chrome restricts capture or script injection on internal pages (`chrome://`), the Chrome Web Store and the built-in PDF viewer; these may show `ERR`.
+- If the page scrolls an inner container instead of the document (Gmail, some web apps), only the visible area is captured.
+- Horizontal scrolling is not captured, only the window width.
+- Very long pages are cut at 60,000 CSS pixels; very large images are scaled down proportionally to fit canvas limits.
+- Animated or infinitely loading content may not stitch perfectly.
+- Keep the captured tab active throughout capture. Chrome captures the active tab in the window, and switching tabs during a capture can race with the extension's active-tab check.
+
+## Building a release archive
 
 ```bash
-./scripts/package.sh   # создаёт dist/web-shot-<версия>.zip
+./scripts/package.sh   # creates dist/web-shot-<version>.zip
 ```
 
-## Авторы
+Requires Bash, Python 3 and `zip`. No third-party packages need to be installed.
 
-- **Black Triangle** ([@HelpFreedom](https://github.com/HelpFreedom)) — автор и владелец проекта
-- **Claude** (Anthropic) — соавтор кода
+## Authors
 
-## Лицензия
+- **Black Triangle** ([@HelpFreedom](https://github.com/HelpFreedom)): original author
+- **Claude** (Anthropic): code co-author
+
+## License
 
 [GNU General Public License v3.0](LICENSE)
